@@ -5,7 +5,7 @@
 struct Reaction {
     char *user;
     char *message;
-};
+}
 struct Chat {
     uint32_t id;
     char *user;
@@ -13,7 +13,7 @@ struct Chat {
     char *timestamp;
     uint32_t num_reactions;
     Reaction *reactions;
-};
+}
 
 struct Chat all_chats[];
 
@@ -47,6 +47,8 @@ void handle_response(char *request, int client_sock) {
     }
 
     else if(strncmp(path, "/post", strlen("/post"))){
+	extract_user(path);
+	extract_message(path);
 	//add_chat(username, message);
 	//respond_with_chats(client_sock);
     }
@@ -67,8 +69,6 @@ uint8_t add_chat(char* username, char* message){
 	char buffer[100];
     	time_t now = time(NULL);
     	struct tm *tm_info = localtime(&now);
-	username = extract_user(path);
-	message = extract_message(path);
 	struct Chat new_chat = {username, message};
 	new_chat.id = sizeof(all_chats) / sizeof(all_chats[0]);
 	all_chats[new_chat.id] = new_chat;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    //printf("%s %s\n", username, message);
+    printf("%s %s\n", username, message);
 
     start_server(&handle_response, port);
     
