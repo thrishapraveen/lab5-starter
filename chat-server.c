@@ -5,7 +5,7 @@
 struct Reaction {
     char *user;
     char *message;
-}
+};
 struct Chat {
     uint32_t id;
     char *user;
@@ -13,7 +13,7 @@ struct Chat {
     char *timestamp;
     uint32_t num_reactions;
     Reaction *reactions;
-}
+};
 
 struct Chat all_chats[];
 
@@ -33,6 +33,8 @@ void handle_404(int client_sock, char *path)  {
 
 
 void handle_response(char *request, int client_sock) {
+	
+	char *path;
     printf("\nSERVER LOG: Got request: \"%s\"\n", request);
 
     // Parse the path out of the request line (limit buffer size; sscanf null-terminates)
@@ -41,17 +43,20 @@ void handle_response(char *request, int client_sock) {
         return;
     }
     else if(strncmp(path, "/chats", strlen("/chats"))){
-	//how to print all chats
+	//respond_with_chats(client_sock);	
     }
 
     else if(strncmp(path, "/post", strlen("/post"))){
-	extract_user(path);
-	extract_message(path);
 	//add_chat(username, message);
+	//respond_with_chats(client_sock);
     }
 
     else if(strncmp(path, "/react", strlen("/react"))){
-	
+	extract_user(path);
+	extract_message(path);
+	//add_reaction(username, messagid);
+	////respond_with_chats(client_sock);
+
     }
 
 
@@ -59,15 +64,28 @@ void handle_response(char *request, int client_sock) {
 }
 
 uint8_t add_chat(char* username, char* message){
-	id++;
 	char buffer[100];
     	time_t now = time(NULL);
     	struct tm *tm_info = localtime(&now);
-
+	username = extract_user(path);
+	message = extract_message(path);
+	struct Chat new_chat = {username, message};
+	new_chat.id = sizeof(all_chats) / sizeof(all_chats[0]);
+	all_chats[new_chat.id] = new_chat;
 }
 
+uint8_t add_reaction(char* username, char* message, char* id){
+	if (id > sizeof(all_chats) | id < 0){
+		return;
+	}
+	else{
+		struct Reaction new_reaction = {username, message}; 
+		//memory stuff
+		all_chats[id].numReactions++;
+	}
+}
 
-void extract_user(char* path){
+uint8_t extract_user(char* path){
 	const char *userpath = "user=";
     	char *start = strstr(path, userpath);
 
@@ -80,12 +98,12 @@ void extract_user(char* path){
             // Terminate the username string at the '/'
             *end = '\0';
         }
-	username = start;
+	return start;
 	
     }
 }
 
-void extract_message(char* path){
+uint8_t extract_message(char* path){
 	const char *messagepath = "&";
     	char *start = strstr(path, messagepath);
 
@@ -98,7 +116,7 @@ void extract_message(char* path){
             // Terminate the username string at the '/'
             *end = '\0';
         }
-	message = start;
+	return start;
 	
     }
 }
@@ -109,7 +127,10 @@ int main(int argc, char *argv[]) {
         port = atoi(argv[1]);
     }
 	
-    printf("%s %s\n", username, message);
+
+
+
+    //printf("%s %s\n", username, message);
 
     start_server(&handle_response, port);
     
